@@ -1,15 +1,29 @@
-var express = require("express");
-var app = express();
+const express = require("express");
+const mongoose = require("mongoose");
+const cookieSession = require("cookie-session");
+const passport = require("passport");
+const keys = require("./config/keys");
+//need to add model before passport call (create schema then call it)
+require("./models/User");
+require("./services/passport");
 
-app.get("/", function(req, res) {
-  res.send({ hi: "there" });
-});
+mongoose.connect(keys.mongoURI);
+
+const app = express();
+
+app.use(
+  cookieSession({
+    //expires in 30 days
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+    keys: [keys.cookieKey]
+  })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+require("./routes/authRoutes")(app);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT);
-// var server = app.listen(PORT, function() {
-//   var host = server.address().address;
-//   var port = server.address().port;
-
-//   console.log("Example app listening at http://%s:%s", host, port);
-// });
+console.log("server started");
